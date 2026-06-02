@@ -59,6 +59,17 @@ Kaneo sends Slack Block Kit messages with:
 
 Make sure [`KANEO_CLIENT_URL`](/core/installation/environment-variables) is set to your public Kaneo URL so task links work correctly.
 
+## Slack-compatible endpoints
+
+The webhook URL field accepts any HTTPS URL, not just `hooks.slack.com`. Kaneo posts the same Slack Block Kit payload it would send to Slack, so any service that accepts Slack-formatted incoming webhooks will work. This includes:
+
+- **Mattermost** — paste an incoming webhook URL from a Mattermost server (e.g. `https://mattermost.example.com/hooks/...`).
+- **Rocket.Chat** — paste an integration URL configured for the Slack format.
+- **Discord** — append `/slack` to a Discord webhook URL (e.g. `https://discord.com/api/webhooks/.../slack`) and Discord will parse the Slack payload.
+- **Mock servers / proxies** — useful for local development, request capture (e.g. webhook.site), or routing notifications through your own service.
+
+The same event toggles and message format apply regardless of destination. If you point Kaneo at a non-Slack endpoint, message rendering depends on how completely that service implements Slack's Block Kit format.
+
 ## Updating the webhook
 
 To change the webhook URL after connecting, paste the new URL in the webhook field and click **Save Changes**. If you leave the field empty, the existing URL is kept.
