@@ -112,48 +112,38 @@ async function sendSlackMessage(
     data.taskNumber !== null ? `#${data.taskNumber}` : "Task update";
   const escapedIssueKey = escapeSlack(issueKey);
   const escapedTaskTitle = escapeSlack(data.taskTitle);
-  const taskLabel = data.taskUrl
-    ? `<${data.taskUrl}|${escapedIssueKey} ${escapedTaskTitle}>`
-    : `${escapedIssueKey} ${escapedTaskTitle}`;
-  const escapedTitle = escapeSlack(title);
-  const escapedBody = escapeSlack(body);
+  const attachmentTitle = `${escapedIssueKey} ${escapedTaskTitle}`;
 
   await postToSlack(config.webhookUrl, {
     text: `${title}: ${data.taskTitle}`,
-    blocks: [
+    attachments: [
       {
-        type: "section",
-        text: {
-          type: "mrkdwn",
-          text: `*${escapedTitle}*\n${escapedBody}`,
-        },
+        color: "#4f46e5",
+        title: attachmentTitle,
+        title_link: data.taskUrl ?? undefined,
+        text: escapeSlack(body),
         fields: [
           {
-            type: "mrkdwn",
-            text: `*Task*\n${taskLabel}`,
+            title: "Project",
+            value: escapeSlack(data.projectName),
+            short: true,
           },
           {
-            type: "mrkdwn",
-            text: `*Project*\n${escapeSlack(data.projectName)}`,
+            title: "Status",
+            value: escapeSlack(toSentenceCase(data.status)),
+            short: true,
           },
           {
-            type: "mrkdwn",
-            text: `*Status*\n${escapeSlack(toSentenceCase(data.status))}`,
+            title: "Priority",
+            value: escapeSlack(toSentenceCase(data.priority)),
+            short: true,
           },
           {
-            type: "mrkdwn",
-            text: `*Priority*\n${escapeSlack(toSentenceCase(data.priority))}`,
-          },
-        ],
-      },
-      {
-        type: "context",
-        elements: [
-          {
-            type: "mrkdwn",
-            text: data.actorName
-              ? `Triggered by ${escapeSlack(data.actorName)}`
-              : "Triggered by Kaneo",
+            title: "Triggered by",
+            value: data.actorName
+              ? escapeSlack(data.actorName)
+              : "Kaneo",
+            short: true,
           },
         ],
       },
