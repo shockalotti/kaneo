@@ -1,33 +1,31 @@
 ---
-title: Slack
-description: Send task notifications from Kaneo to a Slack channel using incoming webhooks.
+title: Mattermost
+description: Send task notifications from Kaneo to a Mattermost channel using incoming webhooks.
 ---
 
-Kaneo can post task activity to a Slack channel whenever events occur in a project. This uses Slack's incoming webhook feature — no bot token or OAuth flow required.
+Kaneo can post task activity to a Mattermost channel whenever events occur in a project. This uses Mattermost's incoming webhook feature — no bot account or OAuth flow required.
 
-## Create a Slack webhook
+## Create a Mattermost webhook
 
-1. Go to [api.slack.com/apps](https://api.slack.com/apps) and click **Create New App** then **From scratch**.
-2. Name your app (e.g. "Kaneo") and select your workspace.
-3. In the app settings, go to **Incoming Webhooks** and toggle it **On**.
-4. Click **Add New Webhook to Workspace**.
-5. Select the channel where you want notifications (or choose your own DM for personal notifications).
-6. Click **Allow**, then copy the webhook URL. It will look like:
+1. In Mattermost, go to **Main Menu → Integrations → Incoming Webhooks**.
+2. Click **Add Incoming Webhook**.
+3. Give it a title (e.g. "Kaneo") and select the default channel where notifications should be posted.
+4. Click **Save**, then copy the webhook URL. It will look like:
 
 ```
-https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+https://your-mattermost-server.com/hooks/xxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
 <Warning>
-If your Slack workspace restricts app installations, you may need a workspace admin to approve the app before you can use the webhook.
+If the Integrations menu is not visible, your Mattermost admin may need to enable incoming webhooks under **System Console → Integrations → Integration Management**.
 </Warning>
 
-## Connect Slack in Kaneo
+## Connect Mattermost in Kaneo
 
 1. Open **Settings** in the sidebar.
 2. Under **Projects**, select the project you want to connect.
 3. Open the **Integrations** tab.
-4. Expand the **Slack** section.
+4. Expand the **Mattermost** section.
 5. Paste your webhook URL.
 6. Optionally add a channel name label for your own reference.
 7. Choose which events to subscribe to (see below).
@@ -50,12 +48,12 @@ You can toggle any combination of these events in the integration settings at an
 
 ## Message format
 
-Kaneo sends Slack Block Kit messages with:
+Kaneo sends messages using Mattermost's legacy attachment format with:
 
-- A header describing the event (e.g. "Task Status Changed")
-- Task name with a clickable link to the task in Kaneo
-- Fields for project, status, and priority
-- The name of the user who triggered the event
+- A clickable title linking to the task in Kaneo
+- A description of the event (e.g. "Task moved from In Progress to Done")
+- Fields for project, status, priority, and the user who triggered the event
+- An indigo sidebar colour for easy visual identification
 
 Make sure [`KANEO_CLIENT_URL`](/core/installation/environment-variables) is set to your public Kaneo URL so task links work correctly.
 
