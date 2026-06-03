@@ -106,22 +106,20 @@ export function MattermostIntegrationSettings({
   const { mutateAsync: deleteIntegration, isPending: isDeleting } =
     useDeleteMattermostIntegration();
 
-  const normalizedValues =
-    React.useMemo<MattermostIntegrationFormValues>(
-      () => ({
-        webhookUrl: "",
-        channelName: integration?.channelName ?? "",
-        taskCreated: integration?.events?.taskCreated ?? true,
-        taskStatusChanged: integration?.events?.taskStatusChanged ?? true,
-        taskPriorityChanged:
-          integration?.events?.taskPriorityChanged ?? false,
-        taskTitleChanged: integration?.events?.taskTitleChanged ?? false,
-        taskDescriptionChanged:
-          integration?.events?.taskDescriptionChanged ?? false,
-        taskCommentCreated: integration?.events?.taskCommentCreated ?? true,
-      }),
-      [integration],
-    );
+  const normalizedValues = React.useMemo<MattermostIntegrationFormValues>(
+    () => ({
+      webhookUrl: "",
+      channelName: integration?.channelName ?? "",
+      taskCreated: integration?.events?.taskCreated ?? true,
+      taskStatusChanged: integration?.events?.taskStatusChanged ?? true,
+      taskPriorityChanged: integration?.events?.taskPriorityChanged ?? false,
+      taskTitleChanged: integration?.events?.taskTitleChanged ?? false,
+      taskDescriptionChanged:
+        integration?.events?.taskDescriptionChanged ?? false,
+      taskCommentCreated: integration?.events?.taskCommentCreated ?? true,
+    }),
+    [integration],
+  );
 
   const form = useForm<MattermostIntegrationFormValues>({
     resolver: standardSchemaResolver(schema),
@@ -381,9 +379,7 @@ export function MattermostIntegrationSettings({
 
             <EventToggle
               control={form.control}
-              label={t(
-                "settings:mattermostIntegration.events.taskCreated",
-              )}
+              label={t("settings:mattermostIntegration.events.taskCreated")}
               name="taskCreated"
             />
             <EventToggle

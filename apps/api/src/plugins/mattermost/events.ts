@@ -29,10 +29,7 @@ type MattermostEventData = {
   priority: string | null;
 };
 
-function isEnabled(
-  config: MattermostConfig,
-  key: MattermostEventKey,
-): boolean {
+function isEnabled(config: MattermostConfig, key: MattermostEventKey): boolean {
   return config.events?.[key] ?? false;
 }
 
@@ -154,9 +151,7 @@ export async function handleTaskCreated(
   event: TaskCreatedEvent,
   context: PluginContext,
 ): Promise<void> {
-  const config = normalizeMattermostConfig(
-    context.config as MattermostConfig,
-  );
+  const config = normalizeMattermostConfig(context.config as MattermostConfig);
   if (!isEnabled(config, "taskCreated")) return;
 
   const data = await getMattermostEventData(
@@ -178,9 +173,7 @@ export async function handleTaskStatusChanged(
   event: TaskStatusChangedEvent,
   context: PluginContext,
 ): Promise<void> {
-  const config = normalizeMattermostConfig(
-    context.config as MattermostConfig,
-  );
+  const config = normalizeMattermostConfig(context.config as MattermostConfig);
   if (!isEnabled(config, "taskStatusChanged")) return;
 
   const data = await getMattermostEventData(
@@ -202,9 +195,7 @@ export async function handleTaskPriorityChanged(
   event: TaskPriorityChangedEvent,
   context: PluginContext,
 ): Promise<void> {
-  const config = normalizeMattermostConfig(
-    context.config as MattermostConfig,
-  );
+  const config = normalizeMattermostConfig(context.config as MattermostConfig);
   if (!isEnabled(config, "taskPriorityChanged")) return;
 
   const data = await getMattermostEventData(
@@ -226,9 +217,7 @@ export async function handleTaskTitleChanged(
   event: TaskTitleChangedEvent,
   context: PluginContext,
 ): Promise<void> {
-  const config = normalizeMattermostConfig(
-    context.config as MattermostConfig,
-  );
+  const config = normalizeMattermostConfig(context.config as MattermostConfig);
   if (!isEnabled(config, "taskTitleChanged")) return;
 
   const data = await getMattermostEventData(
@@ -250,9 +239,7 @@ export async function handleTaskDescriptionChanged(
   event: TaskDescriptionChangedEvent,
   context: PluginContext,
 ): Promise<void> {
-  const config = normalizeMattermostConfig(
-    context.config as MattermostConfig,
-  );
+  const config = normalizeMattermostConfig(context.config as MattermostConfig);
   if (!isEnabled(config, "taskDescriptionChanged")) return;
 
   const data = await getMattermostEventData(
@@ -274,9 +261,7 @@ export async function handleTaskCommentCreated(
   event: TaskCommentCreatedEvent,
   context: PluginContext,
 ): Promise<void> {
-  const config = normalizeMattermostConfig(
-    context.config as MattermostConfig,
-  );
+  const config = normalizeMattermostConfig(context.config as MattermostConfig);
   if (!isEnabled(config, "taskCommentCreated")) return;
 
   const data = await getMattermostEventData(

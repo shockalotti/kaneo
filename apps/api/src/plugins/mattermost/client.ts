@@ -18,10 +18,7 @@ export async function postToMattermost(
   message: MattermostMessage,
 ): Promise<void> {
   const controller = new AbortController();
-  const timeoutId = setTimeout(
-    () => controller.abort(),
-    MATTERMOST_TIMEOUT_MS,
-  );
+  const timeoutId = setTimeout(() => controller.abort(), MATTERMOST_TIMEOUT_MS);
 
   try {
     const response = await fetch(webhookUrl, {
