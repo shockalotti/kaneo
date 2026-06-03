@@ -140,9 +140,7 @@ async function sendSlackMessage(
           },
           {
             title: "Triggered by",
-            value: data.actorName
-              ? escapeSlack(data.actorName)
-              : "Kaneo",
+            value: data.actorName ? escapeSlack(data.actorName) : "Kaneo",
             short: true,
           },
         ],
