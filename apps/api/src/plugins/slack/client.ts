@@ -14,9 +14,18 @@ export type SlackBlock =
       elements: SlackTextObject[];
     };
 
+export type SlackAttachment = {
+  color?: string;
+  title?: string;
+  title_link?: string;
+  text?: string;
+  fields?: Array<{ title: string; value: string; short?: boolean }>;
+};
+
 export type SlackMessage = {
   text: string;
   blocks?: SlackBlock[];
+  attachments?: SlackAttachment[];
 };
 
 const SLACK_TIMEOUT_MS = 10_000;
