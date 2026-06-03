@@ -7,8 +7,8 @@ import db from "../database";
 import { integrationTable } from "../database/schema";
 import {
   defaultMattermostEvents,
-  normalizeMattermostConfig,
   type MattermostConfig,
+  normalizeMattermostConfig,
   validateMattermostConfig,
 } from "../plugins/mattermost/config";
 import { mattermostIntegrationSchema } from "../schemas";
