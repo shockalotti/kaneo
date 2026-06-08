@@ -148,6 +148,21 @@ function buildDeliveryContent(notification: {
           : "A task is past its due date.",
       };
     }
+    case "task_mention": {
+      const commenterName = getStringValue(
+        notification.eventData,
+        "commenterName",
+      );
+      const taskTitle = getStringValue(notification.eventData, "taskTitle");
+      return {
+        title: commenterName
+          ? `${commenterName} mentioned you`
+          : "You were mentioned",
+        body: taskTitle
+          ? `You were mentioned in a comment on "${taskTitle}".`
+          : "You were mentioned in a comment.",
+      };
+    }
     default:
       return {
         title: notification.title ?? "New Kaneo notification",

@@ -33,6 +33,7 @@ import { bundledLanguages, type Highlighter } from "shiki";
 import { AttachmentCard } from "@/components/task/extensions/attachment-card";
 import { EmbedBlock } from "@/components/task/extensions/embed-block";
 import { KaneoIssueLink } from "@/components/task/extensions/kaneo-issue-link";
+import { Mention } from "@/components/task/extensions/mention";
 import {
   SHIKI_CODEBLOCK_REFRESH_META,
   ShikiCodeBlock,
@@ -49,6 +50,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/menu";
+import useGetWorkspaceUsers from "@/hooks/queries/workspace-users/use-get-workspace-users";
 import { cn } from "@/lib/cn";
 import { parseTaskListMarkdownToNodes } from "@/lib/editor-task-list-paste";
 import {
@@ -80,6 +82,7 @@ type CommentEditorProps = {
   ensureTaskId?: () => Promise<string | null>;
   showQuickAttachButton?: boolean;
   onAttachActionChange?: (attach: (() => void) | null) => void;
+  workspaceId?: string;
 };
 
 type SlashRange = { from: number; to: number };
@@ -94,6 +97,15 @@ type SlashCommand = {
 };
 
 type SlashMenuState = {
+  from: number;
+  to: number;
+  query: string;
+  top: number;
+  left: number;
+  selectedIndex: number;
+};
+
+type MentionMenuState = {
   from: number;
   to: number;
   query: string;
@@ -173,6 +185,7 @@ export default function CommentEditor({
   ensureTaskId,
   showQuickAttachButton = true,
   onAttachActionChange,
+  workspaceId,
 }: CommentEditorProps) {
   const { t } = useTranslation();
   const resolvedPlaceholder =
@@ -196,6 +209,7 @@ export default function CommentEditor({
     range?: SlashRange;
   } | null>(null);
   const [slashMenu, setSlashMenu] = useState<SlashMenuState | null>(null);
+  const [mentionMenu, setMentionMenu] = useState<MentionMenuState | null>(null);
   const [shikiHighlighter, setShikiHighlighter] = useState<Highlighter | null>(
     null,
   );
@@ -217,6 +231,24 @@ export default function CommentEditor({
     src: string;
     alt: string;
   } | null>(null);
+  const { data: workspaceUsersData } = useGetWorkspaceUsers({
+    workspaceId,
+  });
+  const workspaceMembers = workspaceUsersData ?? [];
+
+  const filteredMentionUsers = useMemo(() => {
+    if (!mentionMenu) return [];
+    const q = mentionMenu.query.toLowerCase();
+    const filtered = q
+      ? workspaceMembers.filter(
+          (m) =>
+            m.user.name?.toLowerCase().includes(q) ||
+            m.user.email.toLowerCase().includes(q),
+        )
+      : workspaceMembers;
+    return filtered.slice(0, 8);
+  }, [workspaceMembers, mentionMenu]);
+
   const codeLanguages = useMemo(
     () =>
       CODE_LANG_VALUES.map((value) => ({
@@ -598,6 +630,7 @@ export default function CommentEditor({
         EmbedBlock,
         AttachmentCard,
         KaneoIssueLink,
+        Mention,
         TaskList,
         Image.configure({
           HTMLAttributes: {
@@ -812,6 +845,65 @@ export default function CommentEditor({
             }
           }
 
+          if (!readOnly && !disabled && mentionMenu) {
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              setMentionMenu((current) => {
+                if (!current) return current;
+                return {
+                  ...current,
+                  selectedIndex:
+                    (current.selectedIndex + 1) %
+                    Math.max(filteredMentionUsers.length, 1),
+                };
+              });
+              return true;
+            }
+
+            if (event.key === "ArrowUp") {
+              event.preventDefault();
+              setMentionMenu((current) => {
+                if (!current) return current;
+                return {
+                  ...current,
+                  selectedIndex:
+                    (current.selectedIndex -
+                      1 +
+                      Math.max(filteredMentionUsers.length, 1)) %
+                    Math.max(filteredMentionUsers.length, 1),
+                };
+              });
+              return true;
+            }
+
+            if (
+              (event.key === "Enter" || event.key === "Tab") &&
+              filteredMentionUsers.length
+            ) {
+              event.preventDefault();
+              const member =
+                filteredMentionUsers[
+                  Math.min(
+                    mentionMenu.selectedIndex,
+                    filteredMentionUsers.length - 1,
+                  )
+                ];
+              if (member) {
+                insertMention(
+                  member.user.id,
+                  member.user.name ?? member.user.email,
+                );
+              }
+              return true;
+            }
+
+            if (event.key === "Escape") {
+              event.preventDefault();
+              setMentionMenu(null);
+              return true;
+            }
+          }
+
           if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
             const submit = onSubmitShortcutRef.current;
             if (!readOnly && !disabled && submit) {
@@ -992,6 +1084,89 @@ export default function CommentEditor({
       editor.off("update", syncSlash);
     };
   }, [editor, updateSlashMenu]);
+
+  const updateMentionMenu = useCallback(
+    (activeEditor: Editor) => {
+      if (readOnly || disabled || !workspaceId) {
+        setMentionMenu(null);
+        return;
+      }
+
+      const { state, view } = activeEditor;
+      const { selection } = state;
+      if (!selection.empty) {
+        setMentionMenu(null);
+        return;
+      }
+
+      const { $from } = selection;
+      if (!$from.parent.isTextblock) {
+        setMentionMenu(null);
+        return;
+      }
+
+      const textBefore = $from.parent.textBetween(
+        0,
+        $from.parentOffset,
+        "\0",
+        "\0",
+      );
+      const match = textBefore.match(/(?:^|\s)@(\w*)$/);
+      if (!match) {
+        setMentionMenu(null);
+        return;
+      }
+
+      const query = match[1] || "";
+      const matchText = match[0];
+      const startsWithSpace = matchText.startsWith(" ");
+      const atOffset =
+        $from.parentOffset - matchText.length + (startsWithSpace ? 1 : 0);
+      const from = $from.start() + atOffset;
+      const to = from + matchText.trimStart().length;
+      const { top, left } = getOverlayPosition(view, $from.pos);
+
+      setMentionMenu((current) => ({
+        from,
+        to,
+        query,
+        top,
+        left,
+        selectedIndex: current?.query === query ? current.selectedIndex : 0,
+      }));
+    },
+    [disabled, getOverlayPosition, readOnly, workspaceId],
+  );
+
+  const insertMention = useCallback(
+    (userId: string, name: string) => {
+      if (!editor || !mentionMenu) return;
+      editor
+        .chain()
+        .focus()
+        .deleteRange({ from: mentionMenu.from, to: mentionMenu.to })
+        .insertContent({
+          type: "mention",
+          attrs: { userId, name },
+        })
+        .insertContent(" ")
+        .run();
+      setMentionMenu(null);
+    },
+    [editor, mentionMenu],
+  );
+
+  useEffect(() => {
+    if (!editor) return;
+    const syncMention = () => updateMentionMenu(editor);
+    editor.on("selectionUpdate", syncMention);
+    editor.on("update", syncMention);
+
+    return () => {
+      editor.off("selectionUpdate", syncMention);
+      editor.off("update", syncMention);
+    };
+  }, [editor, updateMentionMenu]);
 
   useEffect(() => {
     if (!editor) return;
@@ -1671,6 +1846,49 @@ export default function CommentEditor({
                 </div>
               );
             })
+          ) : (
+            <div className="kaneo-tiptap-slash-empty">
+              {t("activity:comment.editor.noCommands")}
+            </div>
+          )}
+        </div>
+      )}
+      {mentionMenu && !readOnly && !disabled && workspaceId && (
+        <div
+          className="kaneo-tiptap-slash-menu"
+          style={{
+            top: mentionMenu.top,
+            left: mentionMenu.left,
+            position: slashMenuPosition,
+          }}
+        >
+          {filteredMentionUsers.length > 0 ? (
+            filteredMentionUsers.map((member, index) => (
+              <button
+                key={member.user.id}
+                type="button"
+                className={`kaneo-tiptap-slash-item${mentionMenu.selectedIndex === index ? " is-selected" : ""}`}
+                onMouseEnter={() =>
+                  setMentionMenu((current) =>
+                    current ? { ...current, selectedIndex: index } : current,
+                  )
+                }
+                onMouseDown={(event) => {
+                  event.preventDefault();
+                  insertMention(
+                    member.user.id,
+                    member.user.name ?? member.user.email,
+                  );
+                }}
+              >
+                <span className="kaneo-tiptap-slash-label">
+                  {member.user.name ?? member.user.email}
+                </span>
+                <span className="kaneo-tiptap-slash-shortcut">
+                  {member.user.email}
+                </span>
+              </button>
+            ))
           ) : (
             <div className="kaneo-tiptap-slash-empty">
               {t("activity:comment.editor.noCommands")}

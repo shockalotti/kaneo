@@ -1,8 +1,10 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { activityTable, taskTable, userTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import createNotification from "../../notification/controllers/create-notification";
+import { parseMentionedUserIds } from "../../utils/parse-mentions";
 
 async function createComment(taskId: string, userId: string, content: string) {
   const [activity] = await db
@@ -27,7 +29,7 @@ async function createComment(taskId: string, userId: string, content: string) {
     .where(eq(userTable.id, userId));
 
   const [task] = await db
-    .select({ projectId: taskTable.projectId })
+    .select({ projectId: taskTable.projectId, title: taskTable.title })
     .from(taskTable)
     .where(eq(taskTable.id, taskId));
 
@@ -37,6 +39,37 @@ async function createComment(taskId: string, userId: string, content: string) {
       comment: `"${user?.name}" commented: ${content}`,
       projectId: task.projectId,
     });
+
+    // Fire mention notifications for each @mentioned user (skip the commenter)
+    const mentionedIds = parseMentionedUserIds(content).filter(
+      (id) => id !== userId,
+    );
+
+    if (mentionedIds.length > 0) {
+      const mentionedUsers = await db
+        .select({ id: userTable.id })
+        .from(userTable)
+        .where(inArray(userTable.id, mentionedIds));
+
+      await Promise.allSettled(
+        mentionedUsers.map((mentioned) =>
+          createNotification({
+            userId: mentioned.id,
+            type: "task_mention",
+            title: `${user?.name ?? "Someone"} mentioned you`,
+            content: `You were mentioned in a comment on "${task.title ?? "a task"}"`,
+            resourceId: taskId,
+            resourceType: "task",
+            eventData: {
+              taskId,
+              taskTitle: task.title,
+              commenterId: userId,
+              commenterName: user?.name ?? null,
+            },
+          }),
+        ),
+      );
+    }
   }
 
   return activity;

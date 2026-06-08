@@ -104,7 +104,9 @@ export default function TaskDetailsContent({
       <span className="text-sm font-medium text-muted-foreground h-[1px] bg-border w-full block shrink-0" />
       <div className="flex flex-col gap-4">
         <h1 className="text-md font-semibold">{t("tasks:detail.activity")}</h1>
-        {user?.id && taskId && <CommentInput taskId={taskId} />}
+        {user?.id && taskId && (
+          <CommentInput taskId={taskId} workspaceId={workspaceId} />
+        )}
         {activities.length > 0 ? (
           <Timeline>
             {activities.map((activity, index) => {

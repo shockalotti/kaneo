@@ -441,6 +441,21 @@ input:-webkit-autofill:active {
     color: color-mix(in srgb, var(--foreground) 56%, transparent);
   }
 
+  /* @mention chip rendered inside TipTap */
+  .kaneo-mention {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.3rem;
+    border-radius: 0.3rem;
+    font-size: 0.85em;
+    font-weight: 500;
+    background: color-mix(in srgb, var(--primary) 14%, transparent);
+    color: var(--primary);
+    cursor: default;
+    user-select: none;
+    white-space: nowrap;
+  }
+
   .kaneo-tiptap-content .ProseMirror p {
     margin: 0.2rem 0;
   }
