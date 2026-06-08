@@ -1,7 +1,12 @@
 import { eq, inArray } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../database";
-import { activityTable, taskTable, userTable } from "../../database/schema";
+import {
+  activityTable,
+  projectTable,
+  taskTable,
+  userTable,
+} from "../../database/schema";
 import { publishEvent } from "../../events";
 import createNotification from "../../notification/controllers/create-notification";
 import { parseMentionedUserIds } from "../../utils/parse-mentions";
@@ -46,6 +51,12 @@ async function createComment(taskId: string, userId: string, content: string) {
     );
 
     if (mentionedIds.length > 0) {
+      const [project] = await db
+        .select({ workspaceId: projectTable.workspaceId })
+        .from(projectTable)
+        .where(eq(projectTable.id, task.projectId))
+        .limit(1);
+
       const mentionedUsers = await db
         .select({ id: userTable.id })
         .from(userTable)
@@ -63,6 +74,8 @@ async function createComment(taskId: string, userId: string, content: string) {
             eventData: {
               taskId,
               taskTitle: task.title,
+              projectId: task.projectId,
+              workspaceId: project?.workspaceId ?? null,
               commenterId: userId,
               commenterName: user?.name ?? null,
             },
