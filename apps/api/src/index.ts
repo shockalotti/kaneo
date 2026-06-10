@@ -31,6 +31,7 @@ import giteaIntegration, { handleGiteaWebhookRoute } from "./gitea-integration";
 import githubIntegration, {
   handleGithubWebhookRoute,
 } from "./github-integration";
+import glance from "./glance";
 import getInstanceStatus from "./instance/controllers/get-instance-status";
 import invitation from "./invitation";
 import label from "./label";
@@ -519,6 +520,7 @@ export function createApp() {
     githubIntegration,
   );
   const giteaIntegrationApi = api.route("/gitea-integration", giteaIntegration);
+  const glanceApi = api.route("/glance", glance);
   const genericWebhookIntegrationApi = api.route(
     "/generic-webhook-integration",
     genericWebhookIntegration,
@@ -688,6 +690,7 @@ export function createApp() {
     externalLinkApi,
     genericWebhookIntegrationApi,
     githubIntegrationApi,
+    glanceApi,
     giteaIntegrationApi,
     invitationApi,
     invitationPublicApi,
@@ -806,6 +809,7 @@ const {
   genericWebhookIntegrationApi,
   githubIntegrationApi,
   giteaIntegrationApi,
+  glanceApi,
   invitationApi,
   invitationPublicApi,
   labelApi,
@@ -848,6 +852,7 @@ export type AppType =
   | typeof githubIntegrationApi
   | typeof giteaIntegrationApi
   | typeof genericWebhookIntegrationApi
+  | typeof glanceApi
   | typeof discordIntegrationApi
   | typeof mattermostIntegrationApi
   | typeof slackIntegrationApi
