@@ -26,6 +26,8 @@ import { toast } from "@/lib/toast";
 type MattermostIntegrationFormValues = {
   webhookUrl: string;
   channelName: string;
+  botName: string;
+  mattermostToken: string;
   taskCreated: boolean;
   taskStatusChanged: boolean;
   taskPriorityChanged: boolean;
@@ -87,6 +89,8 @@ export function MattermostIntegrationSettings({
       z.object({
         webhookUrl: z.string(),
         channelName: z.string(),
+        botName: z.string(),
+        mattermostToken: z.string(),
         taskCreated: z.boolean(),
         taskStatusChanged: z.boolean(),
         taskPriorityChanged: z.boolean(),
@@ -110,6 +114,8 @@ export function MattermostIntegrationSettings({
     () => ({
       webhookUrl: "",
       channelName: integration?.channelName ?? "",
+      botName: integration?.botName ?? "",
+      mattermostToken: "",
       taskCreated: integration?.events?.taskCreated ?? true,
       taskStatusChanged: integration?.events?.taskStatusChanged ?? true,
       taskPriorityChanged: integration?.events?.taskPriorityChanged ?? false,
@@ -126,6 +132,8 @@ export function MattermostIntegrationSettings({
     defaultValues: {
       webhookUrl: "",
       channelName: "",
+      botName: "",
+      mattermostToken: "",
       taskCreated: true,
       taskStatusChanged: true,
       taskPriorityChanged: false,
@@ -180,6 +188,8 @@ export function MattermostIntegrationSettings({
           data: {
             webhookUrl: trimmedWebhookUrl,
             channelName: values.channelName || undefined,
+            botName: values.botName || undefined,
+            mattermostToken: values.mattermostToken || undefined,
             events,
           },
         });
@@ -201,6 +211,8 @@ export function MattermostIntegrationSettings({
           json: {
             webhookUrl: trimmedWebhookUrl || undefined,
             channelName: values.channelName || undefined,
+            botName: values.botName || null,
+            mattermostToken: values.mattermostToken || undefined,
             events,
           },
         });
@@ -209,6 +221,7 @@ export function MattermostIntegrationSettings({
       form.reset({
         ...values,
         webhookUrl: trimmedWebhookUrl,
+        mattermostToken: "",
       });
       toast.success(t("settings:mattermostIntegration.toast.saved"));
     } catch (error) {
@@ -246,6 +259,8 @@ export function MattermostIntegrationSettings({
       form.reset({
         webhookUrl: "",
         channelName: "",
+        botName: "",
+        mattermostToken: "",
         taskCreated: true,
         taskStatusChanged: true,
         taskPriorityChanged: false,
@@ -360,6 +375,62 @@ export function MattermostIntegrationSettings({
                   </FormControl>
                   <p className="text-xs text-muted-foreground">
                     {t("settings:mattermostIntegration.channelHint")}
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="botName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t("settings:mattermostIntegration.botNameLabel")}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder={t(
+                        "settings:mattermostIntegration.botNamePlaceholder",
+                      )}
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    {t("settings:mattermostIntegration.botNameHint")}
+                  </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="mattermostToken"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    {t("settings:mattermostIntegration.mattermostTokenLabel")}
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      autoComplete="off"
+                      placeholder={
+                        integration?.mattermostTokenConfigured
+                          ? t(
+                              "settings:mattermostIntegration.mattermostTokenConfigured",
+                            )
+                          : t(
+                              "settings:mattermostIntegration.mattermostTokenPlaceholder",
+                            )
+                      }
+                      type="password"
+                    />
+                  </FormControl>
+                  <p className="text-xs text-muted-foreground">
+                    {t("settings:mattermostIntegration.mattermostTokenHint")}
                   </p>
                   <FormMessage />
                 </FormItem>

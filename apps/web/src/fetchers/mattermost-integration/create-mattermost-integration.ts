@@ -4,6 +4,8 @@ import type { MattermostIntegration } from "./get-mattermost-integration";
 export type CreateMattermostIntegrationRequest = {
   webhookUrl: string;
   channelName?: string;
+  botName?: string;
+  mattermostToken?: string;
   events?: {
     taskCreated?: boolean;
     taskStatusChanged?: boolean;

@@ -56,8 +56,10 @@ function toResponse(integration: {
     id: integration.id,
     projectId: integration.projectId,
     channelName: config.channelName ?? null,
+    botName: config.botName ?? null,
     webhookConfigured: Boolean(config.webhookUrl),
     maskedWebhookUrl: maskWebhookUrl(config.webhookUrl),
+    mattermostTokenConfigured: Boolean(config.mattermostToken),
     events: {
       ...defaultMattermostEvents,
       ...(config.events ?? {}),
@@ -136,6 +138,8 @@ mattermostIntegration
       v.object({
         webhookUrl: v.pipe(v.string(), v.minLength(1)),
         channelName: v.optional(v.string()),
+        botName: v.optional(v.string()),
+        mattermostToken: v.optional(v.string()),
         events: v.optional(
           v.object({
             taskCreated: v.optional(v.boolean()),
@@ -157,6 +161,8 @@ mattermostIntegration
       const config = normalizeMattermostConfig({
         webhookUrl: body.webhookUrl,
         channelName: body.channelName,
+        botName: body.botName,
+        mattermostToken: body.mattermostToken,
         events: body.events,
       });
 
@@ -219,6 +225,8 @@ mattermostIntegration
       v.object({
         webhookUrl: v.optional(v.string()),
         channelName: v.optional(v.nullable(v.string())),
+        botName: v.optional(v.nullable(v.string())),
+        mattermostToken: v.optional(v.string()),
         isActive: v.optional(v.boolean()),
         events: v.optional(
           v.object({
@@ -260,6 +268,14 @@ mattermostIntegration
           body.channelName === undefined
             ? currentConfig.channelName
             : (body.channelName ?? undefined),
+        botName:
+          body.botName === undefined
+            ? currentConfig.botName
+            : (body.botName ?? undefined),
+        mattermostToken:
+          body.mattermostToken !== undefined
+            ? body.mattermostToken || undefined
+            : currentConfig.mattermostToken,
         events: {
           ...(currentConfig.events ?? {}),
           ...(body.events ?? {}),

@@ -8,10 +8,39 @@ export type MattermostAttachment = {
 
 export type MattermostMessage = {
   text: string;
+  username?: string;
   attachments?: MattermostAttachment[];
 };
 
 const MATTERMOST_TIMEOUT_MS = 10_000;
+
+export async function lookupMattermostUserByEmail(
+  serverUrl: string,
+  token: string,
+  email: string,
+): Promise<string | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5_000);
+
+  try {
+    const response = await fetch(
+      `${serverUrl}/api/v4/users/email/${encodeURIComponent(email)}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
+      },
+    );
+
+    if (!response.ok) return null;
+
+    const user = (await response.json()) as { username?: string };
+    return user.username ?? null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
 
 export async function postToMattermost(
   webhookUrl: string,

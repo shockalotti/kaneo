@@ -1037,6 +1037,13 @@
 			"channelLabel": "Channel name",
 			"channelPlaceholder": "town-square",
 			"channelHint": "Optional label for your reference. Mattermost controls the actual destination channel from the webhook setup.",
+			"botNameLabel": "Bot display name",
+			"botNamePlaceholder": "Kaneo",
+			"botNameHint": "Override the sender name shown in Mattermost. Leave blank to use the webhook's default name.",
+			"mattermostTokenLabel": "Personal access token",
+			"mattermostTokenPlaceholder": "Paste a Mattermost personal access token",
+			"mattermostTokenConfigured": "Token configured — enter a new value to replace it",
+			"mattermostTokenHint": "Optional. Required to resolve @mentions in comments. Create a token in Mattermost under Account Settings → Security → Personal Access Tokens.",
 			"eventsTitle": "Event notifications",
 			"eventsHint": "Choose which project changes should post to Mattermost.",
 			"events": {

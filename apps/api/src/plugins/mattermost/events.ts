@@ -15,7 +15,7 @@ import type {
   TaskStatusChangedEvent,
   TaskTitleChangedEvent,
 } from "../types";
-import { postToMattermost } from "./client";
+import { lookupMattermostUserByEmail, postToMattermost } from "./client";
 import type { MattermostConfig, MattermostEventKey } from "./config";
 import { normalizeMattermostConfig } from "./config";
 
@@ -53,6 +53,83 @@ function truncate(value: string, maxLength: number): string {
   }
 
   return `${value.slice(0, maxLength - 1)}…`;
+}
+
+function extractAttr(attrs: string, name: string): string | null {
+  const m = attrs.match(new RegExp(`\\b${name}=["']([^"']*)["']`));
+  return m?.[1] ?? null;
+}
+
+function extractServerUrl(webhookUrl: string): string | null {
+  try {
+    return new URL(webhookUrl).origin;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveMentions(
+  text: string,
+  config: MattermostConfig,
+): Promise<string> {
+  const MENTION_RE =
+    /<mention\b([^>]*)>[\s\S]*?<\/mention>|<mention\b([^>]*)\/>/g;
+
+  const mentionMatches: Array<{
+    full: string;
+    attrs: string;
+    userId: string;
+    displayName: string;
+  }> = [];
+
+  for (const match of text.matchAll(MENTION_RE)) {
+    const attrs = match[1] ?? match[2] ?? "";
+    const userId = extractAttr(attrs, "user-id");
+    const displayName = extractAttr(attrs, "name");
+    if (userId && displayName) {
+      mentionMatches.push({ full: match[0], attrs, userId, displayName });
+    }
+  }
+
+  if (mentionMatches.length === 0) return text;
+
+  const serverUrl = config.mattermostToken
+    ? extractServerUrl(config.webhookUrl)
+    : null;
+  const replacements = new Map<string, string>();
+
+  for (const { userId, displayName } of mentionMatches) {
+    if (replacements.has(userId)) continue;
+
+    const [kaneorUser] = await db
+      .select({ email: userTable.email })
+      .from(userTable)
+      .where(eq(userTable.id, userId))
+      .limit(1);
+
+    if (kaneorUser && serverUrl && config.mattermostToken) {
+      const mmUsername = await lookupMattermostUserByEmail(
+        serverUrl,
+        config.mattermostToken,
+        kaneorUser.email,
+      );
+      if (mmUsername) {
+        replacements.set(userId, `@${mmUsername}`);
+        continue;
+      }
+    }
+
+    replacements.set(userId, displayName);
+  }
+
+  return text.replace(
+    /<mention\b([^>]*)>[\s\S]*?<\/mention>|<mention\b([^>]*)\/>/g,
+    (full, attrs1: string, attrs2: string) => {
+      const attrs = attrs1 ?? attrs2 ?? "";
+      const userId = extractAttr(attrs, "user-id");
+      return userId ? (replacements.get(userId) ?? full) : full;
+    },
+  );
 }
 
 async function getMattermostEventData(
@@ -114,6 +191,7 @@ async function sendMattermostMessage(
 
   await postToMattermost(config.webhookUrl, {
     text: `${title}: ${data.taskTitle}`,
+    username: config.botName || undefined,
     attachments: [
       {
         color: "#4f46e5",
@@ -271,10 +349,12 @@ export async function handleTaskCommentCreated(
   );
   if (!data) return;
 
+  const resolvedComment = await resolveMentions(event.comment, config);
+
   await sendMattermostMessage(
     config,
     "New task comment",
-    truncate(event.comment.replace(/\s+/g, " "), 200),
+    truncate(resolvedComment.replace(/\s+/g, " "), 200),
     data,
   );
 }

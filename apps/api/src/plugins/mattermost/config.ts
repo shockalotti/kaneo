@@ -19,6 +19,8 @@ export const mattermostConfigSchema = v.object({
     v.regex(mattermostWebhookUrlPattern, "Webhook URL must be an HTTPS URL"),
   ),
   channelName: v.optional(v.string()),
+  botName: v.optional(v.string()),
+  mattermostToken: v.optional(v.string()),
   events: v.optional(
     v.object({
       taskCreated: v.optional(v.boolean()),
@@ -57,6 +59,8 @@ export function normalizeMattermostConfig(
   return {
     ...config,
     channelName: config.channelName?.trim() || undefined,
+    botName: config.botName?.trim() || undefined,
+    mattermostToken: config.mattermostToken?.trim() || undefined,
     events: {
       ...defaultMattermostEvents,
       ...(config.events ?? {}),

@@ -4,8 +4,10 @@ export type MattermostIntegration = {
   id: string;
   projectId: string;
   channelName: string | null;
+  botName: string | null;
   webhookConfigured: boolean;
   maskedWebhookUrl: string;
+  mattermostTokenConfigured: boolean;
   events: {
     taskCreated: boolean;
     taskStatusChanged: boolean;
