@@ -1,3 +1,5 @@
+import { assertPublicWebhookDestination } from "../generic-webhook/config";
+
 export type MattermostAttachment = {
   color?: string;
   title?: string;
@@ -46,6 +48,8 @@ export async function postToMattermost(
   webhookUrl: string,
   message: MattermostMessage,
 ): Promise<void> {
+  await assertPublicWebhookDestination(webhookUrl);
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), MATTERMOST_TIMEOUT_MS);
 

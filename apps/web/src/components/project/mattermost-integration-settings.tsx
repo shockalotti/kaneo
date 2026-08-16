@@ -210,7 +210,7 @@ export function MattermostIntegrationSettings({
           projectId,
           json: {
             webhookUrl: trimmedWebhookUrl || undefined,
-            channelName: values.channelName || undefined,
+            channelName: values.channelName || null,
             botName: values.botName || null,
             mattermostToken: values.mattermostToken || undefined,
             events,
